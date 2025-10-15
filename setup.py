@@ -7,7 +7,7 @@ from os.path import exists, join
 
 import numpy as np
 import setuptools.command.build_ext
-from setuptools import Extension, setup
+from setuptools import Extension, setup, find_packages
 
 platform_is_windows = sys.platform == "win32"
 
@@ -164,4 +164,50 @@ ext_modules += [
     )
 ]
 
-setup(ext_modules=ext_modules, cmdclass={"build_ext": custom_build_ext})
+setup(ext_modules=ext_modules,
+      name="pyopenjtalk",
+      use_scm_version={"version_file": "pyopenjtalk/version.py", "version_file_template": '__version__ = "{version}"'},
+      cmdclass={"build_ext": custom_build_ext},
+      packages=find_packages(include=["pyopenjtalk*"]),
+      include_package_data=True,
+      exclude_package_data={"*": ["*.pyx", "*.pxd"]},
+      setup_requires=[
+            "setuptools>=64",
+            "setuptools_scm>=8",
+            "cython>=0.29.16",
+            "cmake",
+            "numpy>=1.25.0; python_version>='3.9'",
+            "oldest-supported-numpy; python_version<'3.9'",
+        ],
+      install_requires=[
+            "importlib_resources; python_version<'3.9'",
+            "numpy>=1.20.0",
+            "tqdm",
+        ],
+      description="A python wrapper for OpenJTalk",
+      long_description=open("README.md").read() if os.path.exists("README.md") else "",
+      long_description_content_type="text/markdown",
+      python_requires=">=3.8",
+      license="MIT",
+      author="Ryuichi Yamamoto",
+      author_email="zryuichi@gmail.com",
+      url="https://github.com/r9y9/pyopenjtalk",
+      keywords=["OpenJTalk", "Research"],
+      classifiers=[
+          "Operating System :: POSIX",
+          "Operating System :: Unix",
+          "Operating System :: MacOS",
+          "Operating System :: Microsoft :: Windows",
+          "Programming Language :: Cython",
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.8",
+          "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10",
+          "License :: OSI Approved :: MIT License",
+          "Topic :: Scientific/Engineering",
+          "Topic :: Software Development",
+          "Intended Audience :: Science/Research",
+          "Intended Audience :: Developers",
+      ]
+    )

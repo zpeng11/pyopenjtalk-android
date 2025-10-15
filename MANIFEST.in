@@ -5,3 +5,4 @@ prune docs/**
 recursive-include lib *.cpp *.c *.h README COPYING CMakeLists.txt *.in
 exclude lib/open_jtalk/src/mecab/src/config.h
 prune lib/open_jtalk/src/build/**
+recursive-include pyopenjtalk/htsvoice *.htsvoice *.md LICENSE*

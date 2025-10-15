@@ -1,0 +1,16 @@
+package:
+  name: pyopenjtalk
+  version: "ToBeFilled"
+
+source:
+  path: /app/pyopenjtalk
+
+requirements:
+  build:
+    - cython 3.1.4
+    - setuptools 64.0.1
+    - setuptools_scm 8.1.0
+    - cmake 3.21
+    - numpy 1.25.0
+  host:
+    - python
