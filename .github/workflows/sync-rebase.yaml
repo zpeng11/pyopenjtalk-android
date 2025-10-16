@@ -1,0 +1,33 @@
+name: Sync and Rebase with Upstream
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每 6 小时运行一次（UTC），可调为 '0 * * * *' 每小时
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  sync-rebase:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout your fork
+      uses: actions/checkout@v4
+      with:
+        ref: master  # 你的 master 分支
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sync upstream changes via rebase
+      id: sync
+      uses: aormsby/Fork-Sync-With-Upstream-action@v3
+      with:
+        target_branch: master  # 你的分支
+        upstream_repository: r9y9/pyopenjtalk  # e.g., owner/original-repo
+        upstream_branch: master
+        git_pull_rebase_config: true  # 启用 rebase 而非 merge
+        github_token: ${{ secrets.UPSTREAM_PAT }}  # 用 PAT push
+
+    - name: Show sync result
+      if: steps.sync.outputs.has_new_commits
+      run: echo "Rebase 完成！已更新 ${{ steps.sync.outputs.committed_commits }} 个 commits。"
+
+    # Push 后会自动触发你的 CI workflow（如果 CI 的 on: push 包含 master）
