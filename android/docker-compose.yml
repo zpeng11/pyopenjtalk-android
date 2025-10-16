@@ -3,7 +3,7 @@ services:
   ndk:
     build: .
     volumes:
-      - .:/app/pyopenjtalk
+      - ..:/app/pyopenjtalk
     working_dir: /
-    command: /app/pyopenjtalk/build.sh
+    command: /app/pyopenjtalk/android/build.sh
 # docker-compose run --rm ndk /bin/bash # 进入容器
