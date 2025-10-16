@@ -6,122 +6,34 @@ name: Python package
 on:
   push:
     branches: [ master ]
-    tags:
-      - 'v*'
   pull_request:
     branches: [ master ]
+  # schedule:
+  #   - cron: '0 0 */3 * *'  # 每 3 天 UTC 午夜运行一次
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            python-version: 3.8
-          - os: ubuntu-latest
-            python-version: 3.9
-          - os: ubuntu-latest
-            python-version: '3.10'
-          - os: ubuntu-latest
-            python-version: '3.11'
-          - os: macos-latest
-            python-version: 3.9
-          - os: windows-latest
-            python-version: 3.9
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        submodules: true
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e ".[dev]"
-    - name: Lint with pysen
-      run: |
-        pysen run lint
-    - name: Test with pytest
-      run: |
-        pip install pytest
-        pytest
-
-  build-for-publish:
-    name: Build distribution 📦
+  build:
     runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags')"
-    needs: test
+
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          submodules: true
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade build
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      - name: Build a source tarball and wheel
-        run: python -m build .
+    - name: Build and run with Docker Compose  # 关键调整：cd 到子目录
+      run: |
+        cd android  # 切换到 android/ 目录
+        docker-compose up --build  # 在子目录内运行，build: . 指向 android/
 
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-package-distributions
-          # NOTE: for now upload sdist only to prevent errors like unsupported platform tag 'linux_x86_64'.
-          path: dist/*.tar.gz
+    - name: Verify build output
+      run: |
+        ls -la build/  # 检查 build/
 
-  publish-to-pypi:
-    name: >-
-      Publish Python 🐍 distribution 📦 to PyPI
-    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
-    needs:
-    - build-for-publish
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/pyopenjtalk
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-    steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: true
-
-  # NOTE: for testing purposes only
-  # publish-to-testpypi:
-  #   name: Publish Python 🐍 distribution 📦 to TestPyPI
-  #   needs:
-  #   - build-for-publish
-  #   runs-on: ubuntu-latest
-  #   environment:
-  #     name: testpypi
-  #     url: https://test.pypi.org/p/pyopenjtalk
-  #   permissions:
-  #     id-token: write  # IMPORTANT: mandatory for trusted publishing
-  #   steps:
-  #   - name: Download all the dists
-  #     uses: actions/download-artifact@v4
-  #     with:
-  #       name: python-package-distributions
-  #       path: dist/
-  #   - name: Publish distribution 📦 to TestPyPI
-  #     uses: pypa/gh-action-pypi-publish@release/v1
-  #     with:
-  #       repository-url: https://test.pypi.org/legacy/
-  #       verbose: true
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        path: build/  # 调整为子目录下的 build/
+        retention-days: 7
