@@ -4,12 +4,7 @@
 name: Python package
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-  # schedule:
-  #   - cron: '0 0 */3 * *'  # 每 3 天 UTC 午夜运行一次
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
   build:
@@ -25,7 +20,7 @@ jobs:
     - name: Build and run with Docker Compose  # 关键调整：cd 到子目录
       run: |
         cd android  # 切换到 android/ 目录
-        docker-compose up --build  # 在子目录内运行，build: . 指向 android/
+        docker compose up --build  # 在子目录内运行，build: . 指向 android/
 
     - name: Verify build output
       run: |
